@@ -40,3 +40,18 @@ function assertCleanRepo {
         exit 1
     fi
 }
+
+##############
+# Asserts that the previous call returned a 0 exit code.
+# Kills the bash program otherwise.
+#
+# Usage:
+# someCommand
+# assertLastCall
+# 
+##############
+function assertLastCall {
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+}
