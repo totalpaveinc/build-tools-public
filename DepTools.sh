@@ -26,9 +26,12 @@ function SyncDepFromGitHub {
     assertLastCall
 
     if [ -s "deps/.$depFile" ]; then
-        CURRENT_CHECKSUM=$(echo -n deps/.$depFile)
+        CURRENT_CHECK="$(cat deps/.$depFile)"
         assertLastCall
         if [ "$CURRENT_CHECK" != "$EXPECTED_CHECK" ]; then
+            echo "MISMATCH"
+            echo $CURRENT_CHECK
+            echo $EXPECTED_CHECK
             shouldDownload="1"
         fi
     else
@@ -36,16 +39,15 @@ function SyncDepFromGitHub {
     fi
 
     if [ "$shouldDownload" == "0" ]; then
+        echo "Skipping $depPackage... already up to date"
         return
     fi
 
-    echo $URL
-    echo $depPackage
-    echo $depFile
+    echo "Syncing $depPackage..."
 
     local depFolder="deps/$depPackage/${depPackage}_${depFile}"
 
-    rm -rf "deps/$depPackage/$depPackage-$depFile"
+    rm -rf "$depFolder"
     rm -f "deps/.$depFile"
 
     mkdir -p $depFolder
