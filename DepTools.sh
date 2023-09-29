@@ -8,9 +8,9 @@ function SyncModules {
 }
 
 # Usage:
+# gh release download -R totalpaveinc/libtilegen -p tilegen.xcframework.zip.sha1.txt
 # SyncDepFromGitHub <repo-owner> <repo-name> <version> <filename>
 function SyncDepFromGitHub {
-    # https://github.com/totalpaveinc/sqlite/releases/tag/v0.1.0
     local depOwner="$1"
     local depPackage="$2"
     local depVersion="$3"
@@ -18,20 +18,14 @@ function SyncDepFromGitHub {
 
     local shouldDownload="0"
 
-    local URL="https://github.com/$depOwner/$depPackage/releases/download/$depVersion/$depFile"
-
-    EXPECTED_CHECK=$(curl -sSL "$URL.sha1.txt")
+    EXPECTED_CHECK=$(gh release download -R $depOwner/$depPackage $depVersion -p $depFile.sha1.txt -O -)
     assertLastCall
-    EXPECTED_CHECK="$(echo -e "${EXPECTED_CHECK}" | sed -E -e 's/^[[:space:]]+//' -e 's/[[:space:]]+$//')"
-    assertLastCall
+    # EXPECTED_CHECK="$(echo -e "${EXPECTED_CHECK}" | sed -E -e 's/^[[:space:]]+//' -e 's/[[:space:]]+$//')"
 
     if [ -s "deps/.$depFile" ]; then
         CURRENT_CHECK="$(cat deps/.$depFile)"
         assertLastCall
         if [ "$CURRENT_CHECK" != "$EXPECTED_CHECK" ]; then
-            echo "MISMATCH"
-            echo $CURRENT_CHECK
-            echo $EXPECTED_CHECK
             shouldDownload="1"
         fi
     else
@@ -52,8 +46,11 @@ function SyncDepFromGitHub {
 
     mkdir -p $depFolder
 
-    curl -L -o "$depFolder/$depFile" "$URL"
+    echo "Downloading $depFile..."
+    gh release download -R $depOwner/$depPackage $depVersion -p $depFile -O $depFolder/$depFile
     assertLastCall
+    # curl "$GH_TOKEN_PARAMS" -L -o "$depFolder/$depFile" "$URL"
+    # assertLastCall
 
     if [[ $depFile == *.zip ]]; then
         spushd $depFolder
